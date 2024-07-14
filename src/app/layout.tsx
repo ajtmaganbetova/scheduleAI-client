@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import Schedule from "@/components/Schedule";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -16,7 +17,17 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={inter.className}>{children}</body>
+      <body className="font-sans">
+        <div className="App">
+          <header className="App-header bg-blue-500 text-white p-4">
+            <h1 className="text-3xl font-bold">Welcome to My Courses App</h1>
+          </header>
+          <main className="p-6">
+            <Schedule />
+          </main>
+        </div>
+        {children}
+      </body>
     </html>
   );
 }
