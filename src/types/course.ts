@@ -12,3 +12,12 @@ export interface Course {
   faculty: string;
   room: string;
 }
+
+export interface ScheduleProps {
+  Monday: Course[];
+  Tuesday: Course[];
+  Wednesday: Course[];
+  Thursday: Course[];
+  Friday: Course[];
+  Distant: Course[];
+};

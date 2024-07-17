@@ -4,20 +4,22 @@ import Link from "next/link";
 import { MountainIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useRouter } from "next/navigation";
 
 const LandingPage = () => {
   const [courseAbbr, setCourseAbbr] = useState("");
   const [semester, setSemester] = useState("");
+  const router = useRouter();
 
   const handleSendPrompt = (e: { preventDefault: () => void; }) => {
     e.preventDefault();
 
-    // Store input data in localStorage
+    // store input data in localStorage
+    // don't forget to check if the input is valid
     localStorage.setItem("courseAbbr", courseAbbr);
     localStorage.setItem("semester", semester);
 
-    // Redirect to builder page
-    window.location.href = "/builder";
+    router.push("/builder");
   };
 
   return (
