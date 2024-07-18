@@ -1,22 +1,81 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { Course, ScheduleProps } from "../types/course";
+import { ScheduleProps } from "../types/course";
 
-// Generate time slots on the hour
-const generateTimeSlots = () => {
-  const startHour = 8;
-  const endHour = 23;
-  const slots: string[] = [];
+const times = [
+  "8:00 AM",
+  "8:30 AM",
+  "9:00 AM",
+  "9:30 AM",
+  "10:00 AM",
+  "10:30 AM",
+  "11:00 AM",
+  "11:30 AM",
+  "12:00 PM",
+  "12:30 PM",
+  "1:00 PM",
+  "1:30 PM",
+  "2:00 PM",
+  "2:30 PM",
+  "3:00 PM",
+  "3:30 PM",
+  "4:00 PM",
+  "4:30 PM",
+  "5:00 PM",
+  "5:30 PM",
+  "6:00 PM",
+];
 
-  for (let hour = startHour; hour <= endHour; hour++) {
-    const time = `${hour.toString().padStart(2, "0")}:00`;
-    slots.push(time);
+const getTimeSlotIndex = (time: string) => {
+  const [hoursStr, minutesStr] = time.split(":");
+  const hours = parseInt(hoursStr);
+  const minutes = parseInt(minutesStr.split(" ")[0]);
+  const period = time.split(" ")[1];
+
+  let adjustedHours = hours;
+
+  // Adjust for PM hours not equal to 12
+  if (period === "PM" && hours !== 12) {
+    adjustedHours += 12;
+  } else if (period === "AM" && hours === 12) {
+    adjustedHours = 0; // Midnight case (12:xx AM)
   }
 
-  return slots;
+  // Calculate the index in the times array
+  const index = (adjustedHours - 8) * 2 + (minutes >= 30 ? 1 : 0);
+
+  return index;
 };
 
-const timeSlots = generateTimeSlots(); // Generating time slots from 8:00 AM to 11:00 PM on the hour
+const getFormattedTime = (time: string) => {
+  const [start, end] = time.split("-").map((t) => t.trim());
+  return { start, end };
+};
+
+const calculateSessionDuration = (times: string) => {
+  const [start, end] = times.split("-");
+
+  // convert time string to minutes
+  const timeToMinutes = (time: string) => {
+    const matchResult = time.match(/(\d+):(\d+)\s*([APM]+)/i);
+    const [hours, minutes, period] = matchResult ? matchResult.slice(1) : [];
+    let totalMinutes = parseInt(hours) * 60 + parseInt(minutes);
+    if (period.toUpperCase() === "PM" && hours !== "12") {
+      totalMinutes += 12 * 60;
+    } else if (period.toUpperCase() === "AM" && hours === "12") {
+      totalMinutes -= 12 * 60;
+    }
+    return totalMinutes;
+  };
+
+  const startMinutes = timeToMinutes(start.trim());
+  const endMinutes = timeToMinutes(end.trim());
+
+  // Calculate duration in minutes
+  const durationInMinutes = endMinutes - startMinutes;
+
+  return durationInMinutes;
+};
 
 const ScheduleGrid: React.FC = () => {
   const [schedule, setSchedule] = useState<ScheduleProps | null>(null);
@@ -54,114 +113,75 @@ const ScheduleGrid: React.FC = () => {
     return <p>No schedule found.</p>;
   }
 
-  const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
-  const distantCourses = schedule.Distant || []; // Handle distant courses separately
-
   return (
-    <div className="w-full bg-gray-100 p-6">
-      <h1 className="text-3xl font-bold text-center mb-8">
-        Generated Schedule
-      </h1>
-      <div className="max-w-6xl mx-auto bg-white shadow-md rounded-lg p-6 mb-8">
-        <h2 className="text-2xl font-semibold mb-4">Distant Courses</h2>
-        <div className="grid grid-cols-1 gap-4">
-          {distantCourses.map((course: Course) => (
+    <div className="container mx-auto py-8">
+      <div className="grid grid-cols-6 gap-4">
+        <div className="text-center font-bold">Mon</div>
+        <div className="text-center font-bold">Tue</div>
+        <div className="text-center font-bold">Wed</div>
+        <div className="text-center font-bold">Thu</div>
+        <div className="text-center font-bold">Fri</div>
+      </div>
+      <div className="grid grid-cols-7 gap-4 mt-4">
+        <div className="col-span-1 flex flex-col">
+          {times.map((time, index) => (
             <div
-              key={course.abbreviation}
-              className="bg-green-200 rounded-lg p-4 shadow-sm"
+              key={index}
+              className="flex-1 text-right pr-2 border-t border-gray-300"
             >
-              <strong>{course.abbreviation}</strong>
-              <p>{course.title}</p>
-              <p>{course.times}</p>
-              <p>{course.room}</p>
+              {time}
             </div>
           ))}
         </div>
-      </div>
-      <div className="grid grid-cols-6 gap-4 max-w-6xl mx-auto bg-white shadow-md rounded-lg p-6">
-        <div></div> {/* Placeholder for the time column */}
-        {days.map((day) => (
-          <div key={day} className="text-xl font-semibold text-center p-2">
-            {day}
-          </div>
-        ))}
-        {timeSlots.map((time, index) => (
-          <React.Fragment key={index}>
-            <div className="text-center p-2 border-t">{time}</div>
-            {days.map((day) => {
-              const dayCourses = schedule[day as keyof ScheduleProps];
-              const matchingCourses = dayCourses.filter((course) => {
-                const [startTime, endTime] = course.times.split("-");
-                return (
-                  formatTime(startTime) <= time && formatTime(endTime) > time
-                );
-              });
-
-              return (
-                <div key={`${day}-${time}`} className="p-2 border-t h-20">
-                  {matchingCourses.length > 0 ? (
-                    matchingCourses.map((course, idx) => {
-                      const [startTime, endTime] = course.times.split("-");
-                      const startMinutes = timeToMinutes(startTime);
-                      const endMinutes = timeToMinutes(endTime);
-                      const courseStart = timeToMinutes(time);
-                      const courseEnd = timeToMinutes(endTime);
-
-                      const startRow =
-                        Math.ceil((courseStart - startMinutes) / 5) + 1;
-                      const endRow =
-                        Math.ceil((endMinutes - courseEnd) / 5) + 1;
-
-                      return (
-                        <div
-                          key={`${day}-${time}-${idx}`}
-                          className="bg-blue-200 rounded-lg p-2 shadow-sm"
-                          style={{
-                            gridRow: `${startRow} / span ${endRow - startRow}`,
-                          }}
-                        >
-                          <strong>{course.abbreviation}</strong>
-                          <p>{course.title}</p>
-                          <p>{course.times}</p>
-                          <p>{course.room}</p>
-                        </div>
-                      );
-                    })
-                  ) : (
-                    <div className="h-full"></div>
+        {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"].map(
+          (day, dayIndex) => (
+            <div
+              key={dayIndex}
+              className="col-span-1 flex flex-col border-l border-gray-300"
+            >
+              {times.map((_, index) => (
+                <div
+                  key={index}
+                  className="flex-1 border-t border-gray-300 relative"
+                >
+                  {schedule[day as keyof ScheduleProps]?.map(
+                    (event, eventIndex) => {
+                      const { start, end } = getFormattedTime(event.times);
+                      const startIndex = getTimeSlotIndex(start);
+                      const endIndex = getTimeSlotIndex(end);
+                      if (index === startIndex) {
+                        const duration = calculateSessionDuration(event.times);
+                        const eventHeight = (duration / 30) * 25;
+                        return (
+                          <div
+                            key={eventIndex}
+                            className="absolute top-0 left-0 right-0 p-2 rounded shadow bg-blue-200"
+                            style={{ height: `${eventHeight}px` }}
+                          >
+                            <h3 className="font-semibold text-sm">
+                              {event.abbreviation} {event.type}
+                            </h3>
+                            <p className="text-xs">{event.times}</p>
+                            <p className="text-xs text-gray-600">
+                              {event.faculty}
+                            </p>
+                            <p className="text-xs text-gray-600">
+                              {event.room}
+                            </p>
+                          </div>
+                        );
+                      }
+                      return null;
+                    }
                   )}
                 </div>
-              );
-            })}
-          </React.Fragment>
-        ))}
+              ))}
+            </div>
+          )
+        )}
       </div>
     </div>
   );
-};
-
-const formatTime = (time: string) => {
-  const [hourMinute, period] = time.trim().split(" "); // Trim and split by space
-  const [hour, minute] = hourMinute.split(":");
-  let hour24 = parseInt(hour);
-  if (period === "PM" && hour24 !== 12) {
-    hour24 += 12;
-  } else if (period === "AM" && hour24 === 12) {
-    hour24 = 0;
-  }
-  return `${hour24.toString().padStart(2, "0")}:${minute.padStart(2, "0")}`;
-};
-
-const timeToMinutes = (time: string) => {
-  const [hourMinute, period] = time.trim().split(" "); // Trim and split by space
-  const [hour, minute] = hourMinute.split(":");
-  let hour24 = parseInt(hour);
-  if (period === "PM" && hour24 !== 12) {
-    hour24 += 12;
-  } else if (period === "AM" && hour24 === 12) {
-    hour24 = 0;
-  }
-  return hour24 * 60 + parseInt(minute);
 };
 
 export default ScheduleGrid;

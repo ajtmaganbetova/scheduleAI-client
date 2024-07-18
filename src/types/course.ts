@@ -14,10 +14,11 @@ export interface Course {
 }
 
 export interface ScheduleProps {
+  Distant: Course[];
   Monday: Course[];
   Tuesday: Course[];
   Wednesday: Course[];
   Thursday: Course[];
   Friday: Course[];
-  Distant: Course[];
-};
+  [key: string]: Course[]; // Add index signature
+}
