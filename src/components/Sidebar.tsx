@@ -10,8 +10,12 @@ export default function Sidebar() {
   return (
     <aside className="fixed inset-y-0 left-0 z-10 flex h-full w-64 flex-col border-r bg-background">
       <div className="flex h-16 shrink-0 items-center border-b px-6">
-        <Link href="#" className="font-extrabold" prefetch={false}>
-          scheduleAI
+        <Link
+          href="#"
+          className="font-bold text-xl"
+          prefetch={false}
+        >
+          ScheduleAI
         </Link>
       </div>
       <div className="flex-1 overflow-y-auto px-4 py-6">
