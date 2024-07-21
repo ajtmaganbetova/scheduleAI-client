@@ -15,13 +15,13 @@ const ScheduleGrid: React.FC = () => {
   } | null>(null);
 
   const fetchCourseData = async (courseAbbr: string[], semester: string) => {
+    console.log("Fetching course data...");
     try {
       const response = await axios.post("http://localhost:3001/api/courses", {
         courseAbbr,
         semester,
       });
-      console.log("Fetched Data:", response.data); // Debugging
-      // Assuming the response has `extractedSchedule` as an array with one object
+      console.log("Fetched Data:", response.data);
       setSchedule(response.data.extractedSchedule[0]);
       localStorage.setItem(
         "extractedSchedule",
@@ -34,25 +34,22 @@ const ScheduleGrid: React.FC = () => {
       );
       setLoading(false);
     } catch (error: unknown) {
-      if (error instanceof Error) {
-        console.error(error.message);
-      } else {
-        console.error("An unknown error occurred.");
-      }
+      console.error("Error fetching course data:", error);
       setLoading(false);
     }
   };
 
   useEffect(() => {
+    console.log("Running useEffect...");
     const selectedCourse = localStorage.getItem("courseAbbr");
     const selectedSemester = localStorage.getItem("semester");
     if (selectedCourse && selectedSemester) {
-      const parsedCourses = JSON.parse(selectedCourse); // Parse JSON string to array
+      const parsedCourses = JSON.parse(selectedCourse);
       fetchCourseData(parsedCourses, selectedSemester);
     } else {
       setLoading(false);
     }
-  }, []);
+  }, []); // Make sure this dependency array is accurate
 
   if (loading) {
     return <Loader />;
@@ -62,11 +59,10 @@ const ScheduleGrid: React.FC = () => {
     return <NoSchedule />;
   }
 
-  console.log("Schedule:", schedule); // Debugging
+  console.log("Rendering Schedule:", schedule);
 
   return (
     <div className="flex flex-col flex-1 ml-64">
-      {/* Term Header */}
       <div className="flex justify-between items-center py-3 px-6 border-b">
         <div className="text-xl font-bold">
           {localStorage.getItem("semester")}
@@ -76,15 +72,12 @@ const ScheduleGrid: React.FC = () => {
         </button>
       </div>
       <div className="flex-1 flex flex-col mr-2">
-        {/* Header Row */}
         <div className="flex sticky top-0 z-10 bg-white border-b border-r">
-          <div className="flex gap-0">
-            <div
-              className="text-center font-bold py-1"
-              style={{ width: "100px" }}
-            >
-              Time
-            </div>
+          <div
+            className="text-center font-bold py-1"
+            style={{ width: "100px" }}
+          >
+            Time
           </div>
           <div className="flex-1 grid grid-cols-5 gap-0 items-end">
             {["Mon", "Tue", "Wed", "Thu", "Fri"].map((day, index) => (
@@ -94,8 +87,6 @@ const ScheduleGrid: React.FC = () => {
             ))}
           </div>
         </div>
-
-        {/* Schedule Grid */}
         <div className="flex">
           <TimeColumn />
           <div className="flex-1 grid grid-cols-5 gap-0">
@@ -114,6 +105,5 @@ const ScheduleGrid: React.FC = () => {
     </div>
   );
 };
-
 
 export default ScheduleGrid;

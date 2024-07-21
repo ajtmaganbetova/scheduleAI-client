@@ -49,7 +49,7 @@ const TimeColumn: React.FC = () => (
   >
     {times.map((time, index) => (
       <div
-        key={index}
+        key={index} // Consider using a unique identifier if available
         className="text-right pr-2 text-gray-700 -translate-y-1/2"
         style={{
           height: `${slotHeight}px`,
