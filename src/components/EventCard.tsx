@@ -8,7 +8,7 @@ interface EventCardProps {
 
 const EventCard: React.FC<EventCardProps> = ({ event, height }) => (
   <div
-    className="absolute top-0 left-0 right-0 p-2 rounded-lg shadow-md bg-blue-200"
+    className="absolute top-1 left-1 right-1 p-2 rounded-lg shadow-md bg-blue-200"
     style={{ height: `${height}px` }}
   >
     <h3 className="font-semibold text-sm text-white">

@@ -14,30 +14,41 @@ const ScheduleGrid: React.FC = () => {
     [key: string]: Course;
   } | null>(null);
 
-  const fetchCourseData = async (courseAbbr: string, semester: string) => {
+  const fetchCourseData = async (courseAbbr: string[], semester: string) => {
     try {
       const response = await axios.post("http://localhost:3001/api/courses", {
         courseAbbr,
         semester,
       });
-      setSchedule(response.data.parsedSchedule);
+      console.log("Fetched Data:", response.data); // Debugging
+      // Assuming the response has `extractedSchedule` as an array with one object
+      setSchedule(response.data.extractedSchedule[0]);
+      localStorage.setItem(
+        "extractedSchedule",
+        JSON.stringify(response.data.extractedSchedule[0])
+      );
       setAllSections(response.data.allSections);
       localStorage.setItem(
         "allSections",
         JSON.stringify(response.data.allSections)
       );
       setLoading(false);
-    } catch (error) {
-      console.error("Error fetching course data:", error);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error(error.message);
+      } else {
+        console.error("An unknown error occurred.");
+      }
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    const courseAbbr = localStorage.getItem("courseAbbr");
-    const semester = localStorage.getItem("semester");
-    if (courseAbbr && semester) {
-      fetchCourseData(courseAbbr, semester);
+    const selectedCourse = localStorage.getItem("courseAbbr");
+    const selectedSemester = localStorage.getItem("semester");
+    if (selectedCourse && selectedSemester) {
+      const parsedCourses = JSON.parse(selectedCourse); // Parse JSON string to array
+      fetchCourseData(parsedCourses, selectedSemester);
     } else {
       setLoading(false);
     }
@@ -50,6 +61,8 @@ const ScheduleGrid: React.FC = () => {
   if (!schedule) {
     return <NoSchedule />;
   }
+
+  console.log("Schedule:", schedule); // Debugging
 
   return (
     <div className="flex flex-col flex-1 ml-64">
@@ -81,7 +94,7 @@ const ScheduleGrid: React.FC = () => {
             ))}
           </div>
         </div>
-        
+
         {/* Schedule Grid */}
         <div className="flex">
           <TimeColumn />
@@ -101,5 +114,6 @@ const ScheduleGrid: React.FC = () => {
     </div>
   );
 };
+
 
 export default ScheduleGrid;

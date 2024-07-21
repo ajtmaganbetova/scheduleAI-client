@@ -1,23 +1,49 @@
 "use client";
+
 import { useState } from "react";
 import Link from "next/link";
 import { MountainIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
+import Select from "react-select";
+import { MultiValue } from "react-select";
 
-const LandingPage = () => {
-  const [courseAbbr, setCourseAbbr] = useState("");
-  const [semester, setSemester] = useState("");
+interface OptionType {
+  value: string;
+  label: string;
+}
+
+const courseOptions: OptionType[] = [
+  { value: "CSCI 152", label: "CSCI 152" },
+  { value: "MATH 162", label: "MATH 162" },
+  { value: "PHYS 162", label: "PHYS 162" },
+];
+
+const semesterOptions: OptionType[] = [
+  { value: "Spring 2024", label: "Spring 2024" },
+  { value: "Summer 2024", label: "Summer 2024" },
+  { value: "Fall 2024", label: "Fall 2024" },
+];
+
+const LandingPage: React.FC = () => {
+  const [selectedCourses, setSelectedCourses] = useState<
+    MultiValue<OptionType>
+  >([]);
+  const [selectedSemester, setSelectedSemester] = useState<OptionType | null>(
+    null
+  );
   const router = useRouter();
 
-  const handleSendPrompt = (e: { preventDefault: () => void; }) => {
+  const handleSendPrompt = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // store input data in localStorage
-    // don't forget to check if the input is valid
-    localStorage.setItem("courseAbbr", courseAbbr);
-    localStorage.setItem("semester", semester);
+    // Extract values from selectedCourses and selectedSemester
+    const courseAbbr = selectedCourses.map((course) => course.value);
+    const semesterValue = selectedSemester ? selectedSemester.value : "";
+
+    // Store the extracted values in localStorage
+    localStorage.setItem("courseAbbr", JSON.stringify(courseAbbr)); // Store as JSON string
+    localStorage.setItem("semester", semesterValue);
 
     router.push("/builder");
   };
@@ -52,18 +78,23 @@ const LandingPage = () => {
         </div>
 
         <div className="max-w-2xl w-full mt-8">
-          <form className="flex items-center gap-2" onSubmit={handleSendPrompt}>
-            <Input
-              value={courseAbbr}
-              placeholder="Course abbreviation (e.g. CSCI 152)"
-              className="flex-1 rounded-md px-4 py-2 border border-input focus:border-primary focus:ring-1 focus:ring-primary"
-              onChange={(e) => setCourseAbbr(e.target.value)}
+          <form className="flex flex-col gap-4" onSubmit={handleSendPrompt}>
+            <Select
+              isMulti
+              options={courseOptions}
+              className="basic-multi-select"
+              classNamePrefix="select"
+              value={selectedCourses}
+              onChange={(selected) => setSelectedCourses(selected)}
+              placeholder="Select courses"
             />
-            <Input
-              value={semester}
-              placeholder="Term (e.g. Summer 2024)"
-              className="flex-1 rounded-md px-4 py-2 border border-input focus:border-primary focus:ring-1 focus:ring-primary"
-              onChange={(e) => setSemester(e.target.value)}
+            <Select
+              options={semesterOptions}
+              className="basic-single"
+              classNamePrefix="select"
+              value={selectedSemester}
+              onChange={(selected) => setSelectedSemester(selected)}
+              placeholder="Select semester"
             />
             <Button
               type="submit"
