@@ -17,10 +17,14 @@ const ScheduleGrid: React.FC = () => {
   const fetchCourseData = async (courseAbbr: string[], semester: string) => {
     console.log("Fetching course data...");
     try {
-      const response = await axios.post("http://localhost:3001/api/courses", {
-        courseAbbr,
-        semester,
-      });
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/courses`,
+        {
+          courseAbbr,
+          semester,
+        }
+      );
+
       console.log("Fetched Data:", response.data);
       setSchedule(response.data.extractedSchedule[0]);
       localStorage.setItem(
