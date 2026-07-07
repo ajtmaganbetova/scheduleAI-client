@@ -1,4 +1,5 @@
 This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+The application currently cannot use the AI scheduling feature because the OpenAI API credits have expired. The source code and project architecture remain available for review.
 
 ## Getting Started
 
